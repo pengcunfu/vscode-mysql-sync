@@ -21,23 +21,32 @@ export async function syncDatabase(config: MySQLSyncConfig, progress: vscode.Pro
         remoteConnection = await connectToDatabase(config.remote);
 
         // 获取本地数据库所有表
-        progress.report({ increment: 10, message: "获取本地数据库表列表..." });
+        progress.report({ increment: 5, message: "获取本地数据库表列表..." });
         const tables = await getTables(localConnection);
         
-        if (tables.length === 0) {
-            vscode.window.showWarningMessage('本地数据库没有表需要同步');
+        // 获取视图
+        progress.report({ increment: 5, message: "获取视图列表..." });
+        const views = await getViews(localConnection);
+        
+        // 获取存储过程
+        progress.report({ increment: 5, message: "获取存储过程列表..." });
+        const procedures = await getProcedures(localConnection);
+
+        const totalItems = tables.length + views.length + procedures.length;
+        
+        if (totalItems === 0) {
+            vscode.window.showWarningMessage('本地数据库没有对象需要同步');
             return;
         }
 
-        const totalTables = tables.length;
-        const incrementPerTable = 50 / totalTables;
+        const incrementPerItem = 60 / totalItems;
 
         // 同步每个表
         for (let i = 0; i < tables.length; i++) {
             const table = tables[i];
             progress.report({ 
-                increment: incrementPerTable, 
-                message: `正在同步表 ${i + 1}/${totalTables}: ${table}...` 
+                increment: incrementPerItem, 
+                message: `正在同步表 ${i + 1}/${tables.length}: ${table}...` 
             });
 
             // 获取表结构
@@ -50,7 +59,29 @@ export async function syncDatabase(config: MySQLSyncConfig, progress: vscode.Pro
             await syncTableData(localConnection, remoteConnection, table);
         }
 
-        progress.report({ increment: 20, message: "清理和优化..." });
+        // 同步视图
+        for (let i = 0; i < views.length; i++) {
+            const view = views[i];
+            progress.report({ 
+                increment: incrementPerItem, 
+                message: `正在同步视图 ${i + 1}/${views.length}: ${view}...` 
+            });
+
+            await syncView(localConnection, remoteConnection, view);
+        }
+
+        // 同步存储过程
+        for (let i = 0; i < procedures.length; i++) {
+            const procedure = procedures[i];
+            progress.report({ 
+                increment: incrementPerItem, 
+                message: `正在同步存储过程 ${i + 1}/${procedures.length}: ${procedure}...` 
+            });
+
+            await syncProcedure(localConnection, remoteConnection, procedure);
+        }
+
+        progress.report({ increment: 15, message: "同步完成！" });
 
     } catch (error) {
         console.error('数据库同步错误:', error);
@@ -95,6 +126,37 @@ async function getTables(connection: mysql.Connection): Promise<string[]> {
     }
     
     return tables;
+}
+
+async function getViews(connection: mysql.Connection): Promise<string[]> {
+    // 获取所有视图
+    const [rows] = await connection.query("SHOW FULL TABLES WHERE Table_type = 'VIEW'");
+    const views: string[] = [];
+    
+    if (Array.isArray(rows)) {
+        for (const row of rows) {
+            const viewName = Object.values(row)[0] as string;
+            views.push(viewName);
+        }
+    }
+    
+    return views;
+}
+
+async function getProcedures(connection: mysql.Connection): Promise<string[]> {
+    // 获取所有存储过程
+    const [rows] = await connection.query("SHOW PROCEDURE STATUS");
+    const procedures: string[] = [];
+    
+    if (Array.isArray(rows)) {
+        for (const row of rows as any[]) {
+            if (row.Name) {
+                procedures.push(row.Name);
+            }
+        }
+    }
+    
+    return procedures;
 }
 
 async function getTableCreateStatement(connection: mysql.Connection, tableName: string): Promise<string> {
@@ -170,6 +232,50 @@ async function syncTableData(localConnection: mysql.Connection, remoteConnection
         }
     } catch (error) {
         throw new Error(`同步表数据失败 (${tableName}): ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function syncView(localConnection: mysql.Connection, remoteConnection: mysql.Connection, viewName: string): Promise<void> {
+    try {
+        // 获取视图的创建语句
+        const [rows] = await localConnection.query(`SHOW CREATE VIEW \`${viewName}\``);
+        
+        if (Array.isArray(rows) && rows.length > 0) {
+            const row = rows[0] as any;
+            const createView = row['Create View'];
+            
+            if (createView) {
+                // 先删除远程视图（如果存在）
+                await remoteConnection.query(`DROP VIEW IF EXISTS \`${viewName}\``);
+                
+                // 创建视图
+                await remoteConnection.query(createView);
+            }
+        }
+    } catch (error) {
+        throw new Error(`同步视图失败 (${viewName}): ${error instanceof Error ? error.message : String(error)}`);
+    }
+}
+
+async function syncProcedure(localConnection: mysql.Connection, remoteConnection: mysql.Connection, procedureName: string): Promise<void> {
+    try {
+        // 获取存储过程的创建语句
+        const [rows] = await localConnection.query(`SHOW CREATE PROCEDURE \`${procedureName}\``);
+        
+        if (Array.isArray(rows) && rows.length > 0) {
+            const row = rows[0] as any;
+            const createProcedure = row['Create Procedure'];
+            
+            if (createProcedure) {
+                // 先删除远程存储过程（如果存在）
+                await remoteConnection.query(`DROP PROCEDURE IF EXISTS \`${procedureName}\``);
+                
+                // 创建存储过程
+                await remoteConnection.query(createProcedure);
+            }
+        }
+    } catch (error) {
+        throw new Error(`同步存储过程失败 (${procedureName}): ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 
