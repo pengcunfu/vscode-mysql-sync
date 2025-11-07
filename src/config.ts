@@ -19,7 +19,7 @@ export async function loadConfig(): Promise<MySQLSyncConfig | null> {
     try {
         // 获取配置文件路径
         const config = vscode.workspace.getConfiguration('mysql-sync');
-        const configFileName = config.get<string>('configPath', '.mysql-sync.json');
+        const configFileName = config.get<string>('configPath', '.vscode/.mysql-sync.json');
 
         // 获取工作区根目录
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -30,6 +30,14 @@ export async function loadConfig(): Promise<MySQLSyncConfig | null> {
 
         const workspaceRoot = workspaceFolders[0].uri.fsPath;
         const configPath = path.join(workspaceRoot, configFileName);
+        
+        // 确保 .vscode 目录存在
+        const vscodeDir = path.dirname(configPath);
+        try {
+            await fs.access(vscodeDir);
+        } catch (error) {
+            await fs.mkdir(vscodeDir, { recursive: true });
+        }
 
         // 检查配置文件是否存在
         try {
@@ -108,12 +116,12 @@ export async function generateConfigFile(): Promise<void> {
         }
 
         const workspaceRoot = workspaceFolders[0].uri.fsPath;
-        const vscodeDir = path.join(workspaceRoot, '.vscode');
         const config = vscode.workspace.getConfiguration('mysql-sync');
-        const configFileName = config.get<string>('configPath', '.mysql-sync.json');
+        const configFileName = config.get<string>('configPath', '.vscode/.mysql-sync.json');
         const configPath = path.join(workspaceRoot, configFileName);
 
         // 检查并创建 .vscode 目录
+        const vscodeDir = path.dirname(configPath);
         try {
             await fs.access(vscodeDir);
         } catch (error) {

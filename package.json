@@ -35,7 +35,7 @@
       "properties": {
         "mysql-sync.configPath": {
           "type": "string",
-          "default": ".mysql-sync.json",
+          "default": ".vscode/.mysql-sync.json",
           "description": "MySQL 同步配置文件路径"
         }
       }

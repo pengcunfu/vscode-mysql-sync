@@ -22,7 +22,7 @@
 
 ### 1. 配置数据库连接
 
-在项目根目录创建 `.mysql-sync.json` 配置文件：
+在项目的 `.vscode` 目录下创建 `.mysql-sync.json` 配置文件：
 
 ```json
 {
@@ -44,8 +44,9 @@
 ```
 
 **注意**: 
-- `.mysql-sync.json` 已添加到 `.gitignore`，不会被提交到版本控制
+- 配置文件位于 `.vscode/.mysql-sync.json`，建议添加到 `.gitignore`，避免提交敏感信息
 - 首次运行命令时，如果配置文件不存在，会自动创建模板文件
+- 也可以使用命令 "MySQL Sync: 生成配置文件" 快速创建配置文件
 
 ### 2. 执行同步
 

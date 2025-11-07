@@ -19,7 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
                 // 加载配置
                 const config = await loadConfig();
                 if (!config) {
-                    vscode.window.showErrorMessage('无法加载配置文件，请确保 .mysql-sync.json 存在');
+                    vscode.window.showErrorMessage('无法加载配置文件，请确保 .vscode/.mysql-sync.json 存在');
                     return;
                 }
 

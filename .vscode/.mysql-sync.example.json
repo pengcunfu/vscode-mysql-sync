@@ -1,0 +1,17 @@
+{
+  "local": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "本地密码",
+    "database": "本地数据库名"
+  },
+  "remote": {
+    "host": "服务器IP",
+    "port": 3306,
+    "user": "root",
+    "password": "宝塔数据库密码",
+    "database": "服务器数据库名"
+  }
+}
+
