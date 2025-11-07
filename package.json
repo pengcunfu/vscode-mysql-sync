@@ -2,7 +2,7 @@
   "name": "mysql-sync",
   "displayName": "MySQL Sync",
   "description": "同步本地 MySQL 数据库到远程服务器",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "pengcunfu",
   "icon": "icon_mysql.png",
   "repository": {
