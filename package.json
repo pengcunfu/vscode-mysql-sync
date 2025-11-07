@@ -4,6 +4,7 @@
   "description": "同步本地 MySQL 数据库到远程服务器",
   "version": "0.0.1",
   "publisher": "pengcunfu",
+  "icon": "icon_mysql.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/pengcunfu/vscode-mysql-sync.git"
