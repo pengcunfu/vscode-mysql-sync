@@ -242,9 +242,14 @@ async function syncView(localConnection: mysql.Connection, remoteConnection: mys
         
         if (Array.isArray(rows) && rows.length > 0) {
             const row = rows[0] as any;
-            const createView = row['Create View'];
+            let createView = row['Create View'];
             
             if (createView) {
+                // 移除 DEFINER 子句，避免权限问题
+                createView = createView.replace(/DEFINER\s*=\s*`[^`]*`@`[^`]*`/gi, '');
+                // 移除 SQL SECURITY 子句（如果需要）
+                // createView = createView.replace(/SQL SECURITY (DEFINER|INVOKER)/gi, '');
+                
                 // 先删除远程视图（如果存在）
                 await remoteConnection.query(`DROP VIEW IF EXISTS \`${viewName}\``);
                 
@@ -264,9 +269,12 @@ async function syncProcedure(localConnection: mysql.Connection, remoteConnection
         
         if (Array.isArray(rows) && rows.length > 0) {
             const row = rows[0] as any;
-            const createProcedure = row['Create Procedure'];
+            let createProcedure = row['Create Procedure'];
             
             if (createProcedure) {
+                // 移除 DEFINER 子句，避免权限问题
+                createProcedure = createProcedure.replace(/DEFINER\s*=\s*`[^`]*`@`[^`]*`/gi, '');
+                
                 // 先删除远程存储过程（如果存在）
                 await remoteConnection.query(`DROP PROCEDURE IF EXISTS \`${procedureName}\``);
                 
