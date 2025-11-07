@@ -83,7 +83,8 @@ async function connectToDatabase(config: DatabaseConfig): Promise<mysql.Connecti
 }
 
 async function getTables(connection: mysql.Connection): Promise<string[]> {
-    const [rows] = await connection.query('SHOW TABLES');
+    // 只获取表，不包括视图
+    const [rows] = await connection.query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
     const tables: string[] = [];
     
     if (Array.isArray(rows)) {
@@ -101,7 +102,8 @@ async function getTableCreateStatement(connection: mysql.Connection, tableName: 
     
     if (Array.isArray(rows) && rows.length > 0) {
         const row = rows[0] as any;
-        return row['Create Table'];
+        // 处理普通表和视图的不同返回格式
+        return row['Create Table'] || row['Create View'] || '';
     }
     
     throw new Error(`无法获取表 ${tableName} 的创建语句`);
