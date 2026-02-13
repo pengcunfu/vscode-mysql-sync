@@ -4,7 +4,7 @@
   "description": "同步本地 MySQL 数据库到远程服务器",
   "version": "0.0.4",
   "publisher": "pengcunfu",
-  "icon": "icon_mysql.png",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/pengcunfu/vscode-mysql-sync.git"
@@ -48,7 +48,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@types/vscode": "^1.80.0",

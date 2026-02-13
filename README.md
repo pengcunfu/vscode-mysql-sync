@@ -1,7 +1,5 @@
 # MySQL Sync
 
-![Build VSIX](https://github.com/YOUR_USERNAME/vscode-mysql-sync/workflows/Build%20VSIX/badge.svg)
-
 一个用于同步本地 MySQL 数据库到远程服务器的 VSCode 插件。
 
 ## 功能特性
